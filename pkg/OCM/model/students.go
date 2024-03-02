@@ -2,25 +2,15 @@ package model
 
 import (
 	"context"
-<<<<<<< HEAD
 	"database/sql"
-=======
-	_ "database/sql"
->>>>>>> 4e7b96cb9e0c11961fd9eb80fd47f095004ad943
 	"errors"
 	"time"
 )
 
 type Student struct {
-<<<<<<< HEAD
 	StudentID int    `json:"student_id"`
 	Name      string `json:"name"`
 	Age       int    `json:"age"`
-=======
-	StudentID int     `json:"student_id"`
-	Name      string  `json:"name"`
-	Age       int     `json:"age"`
->>>>>>> 4e7b96cb9e0c11961fd9eb80fd47f095004ad943
 	GPA       float64 `json:"gpa"`
 }
 
@@ -49,15 +39,11 @@ func GetStudents() []Student {
 	return students
 }
 
-<<<<<<< HEAD
 type StudentModel struct {
 	DB *sql.DB
 }
 
 func (sm *StudentModel) Get(id int) (*Student, error) {
-=======
-func (sm *StudentModel) Get(id int) (*Student, error) {
->>>>>>> 4e7b96cb9e0c11961fd9eb80fd47f095004ad943
 	for _, s := range students {
 		if s.StudentID == id {
 			return &s, nil
@@ -66,13 +52,8 @@ func (sm *StudentModel) Get(id int) (*Student, error) {
 	return nil, errors.New("Student not found")
 }
 
-<<<<<<< HEAD
 func (sm *StudentModel) Insert(student *Student) error {
 	
-=======
-func (sm *Model) Insert(student *Student) error {
-
->>>>>>> 4e7b96cb9e0c11961fd9eb80fd47f095004ad943
 	query := `
 		INSERT INTO students (student_id, name, age, gpa) 
 		VALUES ($1, $2, $3, $4) 
@@ -85,13 +66,8 @@ func (sm *Model) Insert(student *Student) error {
 	return sm.DB.QueryRowContext(ctx, query, args...).Scan(&student.StudentID)
 }
 
-<<<<<<< HEAD
 func (sm *StudentModel) Update(student *Student) error {
 	
-=======
-func (sm *UserModel) Update(student *Student) error {
-
->>>>>>> 4e7b96cb9e0c11961fd9eb80fd47f095004ad943
 	query := `
         UPDATE students
         SET name = $1, age = $2, gpa = $3
@@ -105,11 +81,7 @@ func (sm *UserModel) Update(student *Student) error {
 	return sm.DB.QueryRowContext(ctx, query, args...).Scan(&student.StudentID)
 }
 
-<<<<<<< HEAD
 func (sm *StudentModel) Delete(id int) error {
-=======
-func (sm *UserModel) Delete(id int) error {
->>>>>>> 4e7b96cb9e0c11961fd9eb80fd47f095004ad943
 
 	query := `
         DELETE FROM students
