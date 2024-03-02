@@ -66,7 +66,7 @@ func (app *application) createCourseHandler(w http.ResponseWriter, r *http.Reque
 func (app *application) getCourseHandler(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
-	param := vars["courseId"]
+	param := vars["id"]
 
 	id, err := strconv.Atoi(param)
 	if err != nil || id < 1 {
@@ -85,7 +85,7 @@ func (app *application) getCourseHandler(w http.ResponseWriter, r *http.Request)
 
 func (app *application) updateCourseHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	param := vars["courseId"]
+	param := vars["id"]
 
 	id, err := strconv.Atoi(param)
 	if err != nil || id < 1 {
@@ -134,7 +134,7 @@ func (app *application) updateCourseHandler(w http.ResponseWriter, r *http.Reque
 
 func (app *application) deleteCourseHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	param := vars["courseId"]
+	param := vars["id"]
 
 	id, err := strconv.Atoi(param)
 	if err != nil || id < 1 {
