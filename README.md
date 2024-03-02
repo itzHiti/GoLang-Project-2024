@@ -1,15 +1,15 @@
 # Online course management
 
 Features:
-- [x] 
+- [x] REST API for Courses
 
 ## OCM's Rest API
 
 ```
-POST 
-GET 
-PUT 
-DELETE 
+POST /courses
+GET /courses/:id
+PUT /courses/:id
+DELETE /courses/:id
 ```
 
 ## Database structure
