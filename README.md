@@ -4,7 +4,6 @@
 
 ### Features:
 - [x] REST API for Courses
-- [x] REST API for Users (Students)
 - [ ] API structure
 - [x] Structure by Standart Layout
 - [x] File with handlers according to the API description
