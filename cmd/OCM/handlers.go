@@ -29,13 +29,8 @@ func (app *application) HomeHandler(w http.ResponseWriter, r *http.Request) {
 	// Handle home page
 }
 
-func (app *application) CoursesHandler(w http.ResponseWriter, r *http.Request) {
-	// Handle courses page
-}
-
 func (app *application) createCourseHandler(w http.ResponseWriter, r *http.Request) {
 	var input struct {
-		CourseId       int    `json:"course_id"`
 		Title          string `json:"title"`
 		Description    string `json:"description"`
 		CourseDuration string `json:"courseDuration"`
@@ -48,7 +43,6 @@ func (app *application) createCourseHandler(w http.ResponseWriter, r *http.Reque
 	}
 
 	course := &model.Course{
-		CourseId:       input.CourseId,
 		Title:          input.Title,
 		Description:    input.Description,
 		CourseDuration: input.CourseDuration,
