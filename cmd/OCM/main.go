@@ -4,10 +4,10 @@ import (
 	"OCM/pkg/OCM/model"
 	"database/sql"
 	"flag"
+	"github.com/gorilla/mux"
+	_ "github.com/lib/pq"
 	"log"
 	"net/http"
-
-	"github.com/gorilla/mux"
 )
 
 type config struct {
