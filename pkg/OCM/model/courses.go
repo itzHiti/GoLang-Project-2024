@@ -2,6 +2,7 @@ package model
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"time"
 )
@@ -42,12 +43,28 @@ func GetCourses() []Course {
 }
 
 func (cm *CourseModel) Get(id int) (*Course, error) {
-	for _, c := range courses {
-		if c.CourseId == id {
-			return &c, nil
+	// Query the course from the database.
+	query := `
+        SELECT course_id, title, description, course_duration
+        FROM courses
+        WHERE course_id = $1
+    `
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	course := &Course{}
+	err := cm.DB.QueryRowContext(ctx, query, id).Scan(&course.CourseId, &course.Title, &course.Description, &course.CourseDuration)
+	if err != nil { // nil => null
+		if err == sql.ErrNoRows {
+			// The course was not found
+			return nil, errors.New("Courses not Found")
+		} else {
+			// Some other error happened
+			return nil, err
 		}
 	}
-	return nil, errors.New("Courses not Found")
+
+	return course, nil
 }
 
 func (cm *CourseModel) Insert(course *Course) error {
