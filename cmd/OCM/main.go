@@ -29,11 +29,12 @@ func (app *application) run() {
 	r.HandleFunc("/", app.HomeHandler)           // home page
 	r.HandleFunc("/courses", app.CoursesHandler) // course page
 	r.HandleFunc("/user", app.UserHandler)       // user page
-	// Menu Singleton
-	// Create a new menu
-	// Get a specific menu
-	// Update a specific menu
-	// Delete a specific menu
+
+	// Course Singleton
+	r.HandleFunc("/courses/{id}", app.getCourseHandler).Methods("GET")       // Get a specific course
+	r.HandleFunc("/courses", app.createCourseHandler).Methods("POST")        // Create a new course
+	r.HandleFunc("/courses/{id}", app.updateCourseHandler).Methods("PUT")    // Update a specific course
+	r.HandleFunc("/courses/{id}", app.deleteCourseHandler).Methods("DELETE") // Delete a specific course
 
 	log.Printf("Starting server on %s\n", app.config.port)
 	err := http.ListenAndServe(app.config.port, r)

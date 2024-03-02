@@ -1,8 +1,12 @@
 package main
 
 import (
+	"OCM/pkg/OCM/model"
 	"encoding/json"
 	"net/http"
+	"strconv"
+
+	"github.com/gorilla/mux"
 )
 
 func (app *application) respondWithError(w http.ResponseWriter, code int, message string) {
@@ -27,6 +31,124 @@ func (app *application) HomeHandler(w http.ResponseWriter, r *http.Request) {
 
 func (app *application) CoursesHandler(w http.ResponseWriter, r *http.Request) {
 	// Handle courses page
+}
+
+func (app *application) createCourseHandler(w http.ResponseWriter, r *http.Request) {
+	var input struct {
+		CourseId       int    `json:"course_id"`
+		Title          string `json:"title"`
+		Description    string `json:"description"`
+		CourseDuration string `json:"courseDuration"`
+	}
+
+	err := app.readJSON(w, r, &input)
+	if err != nil {
+		app.respondWithError(w, http.StatusBadRequest, "Invalid request payload")
+		return
+	}
+
+	course := &model.Course{
+		CourseId:       input.CourseId,
+		Title:          input.Title,
+		Description:    input.Description,
+		CourseDuration: input.CourseDuration,
+	}
+
+	err = app.models.Courses.Insert(course)
+	if err != nil {
+		app.respondWithError(w, http.StatusInternalServerError, "500 Internal Server Error")
+		return
+	}
+
+	app.respondWithJSON(w, http.StatusCreated, course)
+}
+
+func (app *application) getCourseHandler(w http.ResponseWriter, r *http.Request) {
+
+	vars := mux.Vars(r)
+	param := vars["courseId"]
+
+	id, err := strconv.Atoi(param)
+	if err != nil || id < 1 {
+		app.respondWithError(w, http.StatusBadRequest, "Invalid course ID")
+		return
+	}
+
+	course, err := app.models.Courses.Get(id)
+	if err != nil {
+		app.respondWithError(w, http.StatusNotFound, "404 Not Found")
+		return
+	}
+
+	app.respondWithJSON(w, http.StatusOK, course)
+}
+
+func (app *application) updateCourseHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	param := vars["courseId"]
+
+	id, err := strconv.Atoi(param)
+	if err != nil || id < 1 {
+		app.respondWithError(w, http.StatusBadRequest, "Invalid course ID")
+		return
+	}
+
+	course, err := app.models.Courses.Get(id)
+	if err != nil {
+		app.respondWithError(w, http.StatusNotFound, "404 Not Found")
+		return
+	}
+
+	var input struct {
+		Title          *string `json:"title"`
+		Description    *string `json:"description"`
+		CourseDuration *string `json:"courseDuration"`
+	}
+
+	err = app.readJSON(w, r, &input)
+	if err != nil {
+		app.respondWithError(w, http.StatusBadRequest, "Invalid request payload")
+		return
+	}
+
+	if input.Title != nil {
+		course.Title = *input.Title
+	}
+
+	if input.Description != nil {
+		course.Description = *input.Description
+	}
+
+	if input.CourseDuration != nil {
+		course.CourseDuration = *input.CourseDuration
+	}
+
+	err = app.models.Courses.Update(course)
+	if err != nil {
+		app.respondWithError(w, http.StatusInternalServerError, "500 Internal Server Error")
+		return
+	}
+
+	app.respondWithJSON(w, http.StatusOK, course)
+}
+
+func (app *application) deleteCourseHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	param := vars["courseId"]
+
+	id, err := strconv.Atoi(param)
+	if err != nil || id < 1 {
+		app.respondWithError(w, http.StatusBadRequest, "Invalid course ID")
+		return
+	}
+
+	err = app.models.Courses.Delete(id)
+	if err != nil {
+		app.respondWithError(w, http.StatusInternalServerError, "500 Internal Server Error")
+		return
+	}
+
+	app.respondWithJSON(w, http.StatusOK, map[string]string{"result": "success"})
 }
 
 func (app *application) UserHandler(w http.ResponseWriter, r *http.Request) {
