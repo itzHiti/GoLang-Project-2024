@@ -57,7 +57,7 @@ func (cm *CourseModel) Get(id int) (*Course, error) {
 	if err != nil { // nil => null
 		if err == sql.ErrNoRows {
 			// The course was not found
-			return nil, errors.New("Courses not Found")
+			return nil, errors.New("courses not found")
 		} else {
 			// Some other error happened
 			return nil, err
@@ -70,11 +70,11 @@ func (cm *CourseModel) Get(id int) (*Course, error) {
 func (cm *CourseModel) Insert(course *Course) error {
 	// Insert a new course into the database.
 	query := `
-		INSERT INTO courses (course_id, title, description, course_duration) 
-		VALUES ($1, $2, $3, $4) 
+		INSERT INTO courses (title, description, course_duration) 
+		VALUES ($1, $2, $3) 
 		RETURNING course_id
 		`
-	args := []interface{}{course.CourseId, course.Title, course.Description, course.CourseDuration}
+	args := []interface{}{course.Title, course.Description, course.CourseDuration}
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 

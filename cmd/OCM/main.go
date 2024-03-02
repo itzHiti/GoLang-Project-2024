@@ -4,10 +4,11 @@ import (
 	"OCM/pkg/OCM/model"
 	"database/sql"
 	"flag"
-	"github.com/gorilla/mux"
-	_ "github.com/lib/pq"
 	"log"
 	"net/http"
+
+	"github.com/gorilla/mux"
+	_ "github.com/lib/pq"
 )
 
 type config struct {
@@ -26,9 +27,8 @@ type application struct {
 func (app *application) run() {
 	r := mux.NewRouter()
 
-	r.HandleFunc("/", app.HomeHandler)           // home page
-	r.HandleFunc("/courses", app.CoursesHandler) // course page
-	r.HandleFunc("/user", app.UserHandler)       // user page
+	r.HandleFunc("/", app.HomeHandler)     // home page
+	r.HandleFunc("/user", app.UserHandler) // user page
 
 	// Course Singleton
 	r.HandleFunc("/courses/{id}", app.getCourseHandler).Methods("GET")       // Get a specific course
