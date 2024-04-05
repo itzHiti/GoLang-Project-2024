@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"strings"
 	"time"
 )
 
@@ -107,4 +108,63 @@ func (cm *CourseModel) Delete(id int) error {
 
 	_, err := cm.DB.ExecContext(ctx, query, id)
 	return err
+}
+
+func (cm *CourseModel) List(page, pageSize int, filter, sort string) ([]*Course, error) {
+	var courses []*Course
+
+	baseQuery := `SELECT course_id, title, description, course_duration FROM courses`
+	whereClauses, args := []string{}, []interface{}{}
+
+	// Фильтрация
+	if filter != "" {
+		whereClauses = append(whereClauses, "title ILIKE $1")
+		args = append(args, "%"+filter+"%")
+	}
+
+	// Добавляем WHERE только если есть условия фильтрации
+	if len(whereClauses) > 0 {
+		baseQuery += " WHERE " + strings.Join(whereClauses, " AND ")
+	}
+
+	// Сортировка
+	orderBy := " ORDER BY course_id ASC" // default sort by course_id in ascending order
+	if sort != "" {
+		switch sort {
+		case "title_asc":
+			orderBy = " ORDER BY title ASC"
+		case "title_desc":
+			orderBy = " ORDER BY title DESC"
+		case "duration_asc":
+			orderBy = " ORDER BY course_duration ASC"
+		case "duration_desc":
+			orderBy = " ORDER BY course_duration DESC"
+		}
+	}
+
+	// Пагинация
+	pagination := " LIMIT $2 OFFSET $3"
+	args = append(args, pageSize, (page-1)*pageSize)
+
+	finalQuery := baseQuery + orderBy + pagination
+
+	rows, err := cm.DB.Query(finalQuery, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var course Course
+		if err := rows.Scan(&course.CourseId, &course.Title, &course.Description, &course.CourseDuration); err != nil {
+			return nil, err
+		}
+		courses = append(courses, &course)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return courses, nil
 }
