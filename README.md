@@ -37,11 +37,11 @@ DELETE /courses/:id
 
 ```
 
-Table courses {
-    course_id int [primary key, unique, increment]     
-    title varchar(255) [not null]
+Table courses { 
+    course_id int [primary key, unique, increment]      
+    title varchar(255) [not null] 
     description text    course_duration varchar(50)
-    student_id int [ref: > students.student_id] 
+    course_duration varchar(50) 
     }
 
 Table students {    
