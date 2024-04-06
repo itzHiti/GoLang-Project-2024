@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	_ "github.com/lib/pq"
 )
 
 type config struct {
@@ -26,12 +27,12 @@ type application struct {
 func (app *application) run() {
 	r := mux.NewRouter()
 
-	r.HandleFunc("/", app.HomeHandler)           // home page
-	r.HandleFunc("/courses", app.CoursesHandler) // course page
-	r.HandleFunc("/user", app.UserHandler)       // user page
+	r.HandleFunc("/", app.HomeHandler)     // home page
+	r.HandleFunc("/user", app.UserHandler) // user page
 
 	// Course Singleton
-	r.HandleFunc("/courses/{id}", app.getCourseHandler).Methods("GET")       // Get a specific course
+	// r.HandleFunc("/courses/{id}", app.getCourseHandler).Methods("GET")       // [LEGACY] Get a specific course
+	r.HandleFunc("/courses", app.listCoursesHandler).Methods("GET")
 	r.HandleFunc("/courses", app.createCourseHandler).Methods("POST")        // Create a new course
 	r.HandleFunc("/courses/{id}", app.updateCourseHandler).Methods("PUT")    // Update a specific course
 	r.HandleFunc("/courses/{id}", app.deleteCourseHandler).Methods("DELETE") // Delete a specific course
