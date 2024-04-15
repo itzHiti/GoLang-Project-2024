@@ -29,13 +29,8 @@ func (app *application) HomeHandler(w http.ResponseWriter, r *http.Request) {
 	// Handle home page
 }
 
-func (app *application) CoursesHandler(w http.ResponseWriter, r *http.Request) {
-	// Handle courses page
-}
-
 func (app *application) createCourseHandler(w http.ResponseWriter, r *http.Request) {
 	var input struct {
-		CourseId       int    `json:"course_id"`
 		Title          string `json:"title"`
 		Description    string `json:"description"`
 		CourseDuration string `json:"courseDuration"`
@@ -48,7 +43,6 @@ func (app *application) createCourseHandler(w http.ResponseWriter, r *http.Reque
 	}
 
 	course := &model.Course{
-		CourseId:       input.CourseId,
 		Title:          input.Title,
 		Description:    input.Description,
 		CourseDuration: input.CourseDuration,
@@ -165,4 +159,29 @@ func (app *application) readJSON(w http.ResponseWriter, r *http.Request, dst int
 	}
 
 	return nil
+}
+
+func (app *application) listCoursesHandler(w http.ResponseWriter, r *http.Request) {
+	pageStr := r.URL.Query().Get("page")
+	pageSizeStr := r.URL.Query().Get("pageSize")
+	filter := r.URL.Query().Get("filter")
+	sort := r.URL.Query().Get("sort")
+
+	page, err := strconv.Atoi(pageStr)
+	if err != nil || page < 1 {
+		page = 1 // def value
+	}
+
+	pageSize, err := strconv.Atoi(pageSizeStr)
+	if err != nil || pageSize < 1 {
+		pageSize = 10 // def value
+	}
+
+	courses, err := app.models.Courses.List(page, pageSize, filter, sort)
+	if err != nil {
+		app.respondWithError(w, http.StatusInternalServerError, "Server error")
+		return
+	}
+
+	app.respondWithJSON(w, http.StatusOK, courses)
 }
