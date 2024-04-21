@@ -9,9 +9,7 @@ CREATE TABLE IF NOT EXISTS courses (
     course_id SERIAL PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
     description TEXT,
-    course_duration VARCHAR(50),
-    student_id INT,
-    FOREIGN KEY (student_id) REFERENCES students(student_id)
+    course_duration VARCHAR(50)
 );
 
 CREATE TABLE IF NOT EXISTS courses_and_students (
