@@ -36,6 +36,8 @@ func (app *application) run() {
 	r.HandleFunc("/courses", app.createCourseHandler).Methods("POST")        // Create a new course
 	r.HandleFunc("/courses/{id}", app.updateCourseHandler).Methods("PUT")    // Update a specific course
 	r.HandleFunc("/courses/{id}", app.deleteCourseHandler).Methods("DELETE") // Delete a specific course
+	r.HandleFunc("/register", app.registerUserHandler).Methods("POST")
+	r.HandleFunc("/activate", app.activateUserHandler).Methods("GET") // Using JWT tokens
 
 	log.Printf("Starting server on %s\n", app.config.port)
 	err := http.ListenAndServe(app.config.port, r)

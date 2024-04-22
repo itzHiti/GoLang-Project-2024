@@ -185,3 +185,29 @@ func (app *application) listCoursesHandler(w http.ResponseWriter, r *http.Reques
 
 	app.respondWithJSON(w, http.StatusOK, courses)
 }
+
+func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Request) {
+	var u model.UserModel
+	if err := json.NewDecoder(r.Body).Decode(&u); err != nil {
+		http.Error(w, "Invalid request", http.StatusBadRequest)
+		return
+	}
+	if err := app.models.Users.Register(&u); err != nil {
+		http.Error(w, "Failed to register", http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
+func (app *application) activateUserHandler(w http.ResponseWriter, r *http.Request) {
+	token := r.URL.Query().Get("token")
+	if token == "" {
+		http.Error(w, "Token required", http.StatusBadRequest)
+		return
+	}
+	if err := app.models.Users.ActivateUser(token); err != nil {
+		http.Error(w, "Activation failed", http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}

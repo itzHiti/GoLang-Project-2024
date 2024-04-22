@@ -1,4 +1,5 @@
-# Online course management
+# GoUnion 
+## (ex. Online course management)
 
 ## Features of our project and small description
 
@@ -12,7 +13,7 @@
 
 ### Description:
 > The project is intended to be an online learning website of school of courses.
-> Project name: WIP, but for now it's `Online Course Management`.
+> Project name: `GoUnion`.
 > Project entities: `courses, users`.
 
 ## Members

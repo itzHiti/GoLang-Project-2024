@@ -2,10 +2,14 @@ package model
 
 import (
 	"database/sql"
+	"errors"
 	"log"
 	"os"
+	"time"
+)
 
-	"golang.org/x/crypto/bcrypt"
+var (
+	ErrDuplicateEmail = errors.New("duplicate email")
 )
 
 type Models struct {
@@ -20,14 +24,22 @@ type CourseModel struct {
 	ErrorLog *log.Logger
 }
 
+type Password struct {
+	plaintext *string // открытый текст пароля
+	hash      *string // хэш пароля
+}
+
 type UserModel struct {
-	ID       int    `json:"id"`
-	Name     string `json:"name"`
-	Email    string `json:"email"`
-	Password string `json:"-"`
-	DB       *sql.DB
-	InfoLog  *log.Logger
-	ErrorLog *log.Logger
+	ID        int       `json:"id"`
+	Name      string    `json:"name"`
+	Email     string    `json:"email"`
+	Password  Password  `json:"-"`
+	Activated bool      `json:"activated"`
+	Version   int       `json:"-"`
+	CreatedAt time.Time `json:"created_at"`
+	DB        *sql.DB
+	InfoLog   *log.Logger
+	ErrorLog  *log.Logger
 }
 
 type AssignmentModel struct {
@@ -60,19 +72,4 @@ func NewModels(db *sql.DB) Models {
 			ErrorLog: errorLog,
 		},
 	}
-}
-
-func (u *UserModel) HashPassword(password string) error {
-	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
-	if err != nil {
-		return err
-	}
-
-	u.Password = string(bytes)
-	return nil
-}
-
-func (u *UserModel) CheckPassword(password string) error {
-	err := bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(password))
-	return err
 }
