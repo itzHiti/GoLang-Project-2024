@@ -149,18 +149,6 @@ func (app *application) UserHandler(w http.ResponseWriter, r *http.Request) {
 	// Handle user page
 }
 
-func (app *application) readJSON(w http.ResponseWriter, r *http.Request, dst interface{}) error {
-	dec := json.NewDecoder(r.Body)
-	dec.DisallowUnknownFields()
-
-	err := dec.Decode(dst)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func (app *application) listCoursesHandler(w http.ResponseWriter, r *http.Request) {
 	pageStr := r.URL.Query().Get("page")
 	pageSizeStr := r.URL.Query().Get("pageSize")
@@ -186,28 +174,12 @@ func (app *application) listCoursesHandler(w http.ResponseWriter, r *http.Reques
 	app.respondWithJSON(w, http.StatusOK, courses)
 }
 
-func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Request) {
-	var u model.UserModel
-	if err := json.NewDecoder(r.Body).Decode(&u); err != nil {
-		http.Error(w, "Invalid request", http.StatusBadRequest)
+func (app *application) listCoursesHandlerWithOutFilters(w http.ResponseWriter, r *http.Request) {
+	courses, err := app.models.Courses.AllList()
+	if err != nil {
+		app.respondWithError(w, http.StatusInternalServerError, "Server error")
 		return
 	}
-	if err := app.models.Users.Register(&u); err != nil {
-		http.Error(w, "Failed to register", http.StatusInternalServerError)
-		return
-	}
-	w.WriteHeader(http.StatusOK)
-}
 
-func (app *application) activateUserHandler(w http.ResponseWriter, r *http.Request) {
-	token := r.URL.Query().Get("token")
-	if token == "" {
-		http.Error(w, "Token required", http.StatusBadRequest)
-		return
-	}
-	if err := app.models.Users.ActivateUser(token); err != nil {
-		http.Error(w, "Activation failed", http.StatusInternalServerError)
-		return
-	}
-	w.WriteHeader(http.StatusOK)
+	app.respondWithJSON(w, http.StatusOK, courses)
 }

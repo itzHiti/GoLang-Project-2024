@@ -4,13 +4,14 @@ import (
 	"regexp"
 )
 
-var (
-	EmailRX = regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
-)
-
 type Validator struct {
 	Errors map[string]string
 }
+
+var (
+	EmailRX    = regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
+	UsernameRX = regexp.MustCompile("[a-z_0-9]{3,40}")
+)
 
 func New() *Validator {
 	return &Validator{Errors: make(map[string]string)}
@@ -32,9 +33,9 @@ func (v *Validator) Check(ok bool, key, message string) {
 	}
 }
 
-func PermittedValue[T comparable](value T, permittedValues ...T) bool {
-	for i := range permittedValues {
-		if value == permittedValues[i] {
+func In(value string, list ...string) bool {
+	for i := range list {
+		if value == list[i] {
 			return true
 		}
 	}
@@ -45,11 +46,10 @@ func Matches(value string, rx *regexp.Regexp) bool {
 	return rx.MatchString(value)
 }
 
-func Unique[T comparable](values []T) bool {
-	uniqueValues := make(map[T]bool)
+func Unique(values []string) bool {
+	uniqueValues := make(map[string]bool)
 	for _, value := range values {
 		uniqueValues[value] = true
 	}
-
 	return len(values) == len(uniqueValues)
 }

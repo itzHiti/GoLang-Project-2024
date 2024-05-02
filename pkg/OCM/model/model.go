@@ -2,44 +2,22 @@ package model
 
 import (
 	"database/sql"
-	"errors"
 	"log"
 	"os"
-	"time"
-)
-
-var (
-	ErrDuplicateEmail = errors.New("duplicate email")
 )
 
 type Models struct {
-	Courses     CourseModel
-	Users       UserModel
-	Assignments AssignmentModel
+	Courses       CourseModel
+	Users         UserModel
+	Assignments   AssignmentModel
+	Verifications VerificationModel
+	Roles         RoleModel
 }
 
 type CourseModel struct {
 	DB       *sql.DB
 	InfoLog  *log.Logger
 	ErrorLog *log.Logger
-}
-
-type Password struct {
-	plaintext *string // открытый текст пароля
-	hash      *string // хэш пароля
-}
-
-type UserModel struct {
-	ID        int       `json:"id"`
-	Name      string    `json:"name"`
-	Email     string    `json:"email"`
-	Password  Password  `json:"-"`
-	Activated bool      `json:"activated"`
-	Version   int       `json:"-"`
-	CreatedAt time.Time `json:"created_at"`
-	DB        *sql.DB
-	InfoLog   *log.Logger
-	ErrorLog  *log.Logger
 }
 
 type AssignmentModel struct {
@@ -62,14 +40,18 @@ func NewModels(db *sql.DB) Models {
 			ErrorLog: errorLog,
 		},
 		Users: UserModel{
-			DB:       db,
-			InfoLog:  infoLog,
-			ErrorLog: errorLog,
+			DB: db,
 		},
 		Assignments: AssignmentModel{
 			DB:       db,
 			InfoLog:  infoLog,
 			ErrorLog: errorLog,
+		},
+		Verifications: VerificationModel{
+			DB: db,
+		},
+		Roles: RoleModel{
+			DB: db,
 		},
 	}
 }

@@ -9,10 +9,10 @@ import (
 )
 
 type Course struct {
-	CourseId       int    `json:"course_id"`
+	CourseId       int    `json:"courseid"`
 	Title          string `json:"title"`
 	Description    string `json:"description"`
-	CourseDuration string `json:"courseDuration"`
+	CourseDuration string `json:"courseduration"`
 }
 
 var courses = []Course{
@@ -167,4 +167,30 @@ func (cm *CourseModel) List(page, pageSize int, filter, sort string) ([]*Course,
 	}
 
 	return courses, nil
+}
+
+func (cm *CourseModel) AllList() ([]*Course, error) {
+	var courses []*Course
+	baseQuery := `SELECT courseid, title, description, courseduration FROM course`
+	rows, err := cm.DB.Query(baseQuery)
+	if err != nil {
+		return nil, err // Properly return the error if the query execution fails
+	}
+	defer rows.Close() // Ensure we close the rows to free up resources
+
+	for rows.Next() {
+		var course Course
+		// Scanning each row into a Course struct
+		if err := rows.Scan(&course.CourseId, &course.Title, &course.Description, &course.CourseDuration); err != nil {
+			return nil, err // Return an error if any occurs during row scanning
+		}
+		courses = append(courses, &course) // Append each course to the slice
+	}
+
+	// Check for any error that occurred during the iteration over rows
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return courses, nil // Return the slice of courses
 }
