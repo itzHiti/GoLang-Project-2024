@@ -2,6 +2,7 @@ package main
 
 import (
 	"OCM/pkg/OCM/model"
+	"fmt"
 	"net/http"
 	"strings"
 )
@@ -91,6 +92,8 @@ func (app *application) requireRole(allowedRoles model.Roles, next http.HandlerF
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		user := app.contextGetUser(r)
 		role := user.Role
+		fmt.Println(role)
+		fmt.Println(user)
 		if !allowedRoles.Include(role) {
 			app.notPermittedResponse(w, r)
 			return

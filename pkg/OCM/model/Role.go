@@ -19,3 +19,12 @@ func (p Roles) Include(role string) bool {
 	}
 	return false
 }
+
+func (db *RoleModel) GetUserRole(userID int) (string, error) {
+	var role string
+	err := db.DB.QueryRow("SELECT role FROM users WHERE id = ?", userID).Scan(&role)
+	if err != nil {
+		return "", err
+	}
+	return role, nil
+}

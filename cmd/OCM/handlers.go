@@ -33,7 +33,7 @@ func (app *application) createCourseHandler(w http.ResponseWriter, r *http.Reque
 	var input struct {
 		Title          string `json:"title"`
 		Description    string `json:"description"`
-		CourseDuration string `json:"courseDuration"`
+		CourseDuration string `json:"courseduration"`
 	}
 
 	err := app.readJSON(w, r, &input)
@@ -96,7 +96,7 @@ func (app *application) updateCourseHandler(w http.ResponseWriter, r *http.Reque
 	var input struct {
 		Title          *string `json:"title"`
 		Description    *string `json:"description"`
-		CourseDuration *string `json:"courseDuration"`
+		CourseDuration *string `json:"courseduration"`
 	}
 
 	err = app.readJSON(w, r, &input)
@@ -182,4 +182,60 @@ func (app *application) listCoursesHandlerWithOutFilters(w http.ResponseWriter, 
 	}
 
 	app.respondWithJSON(w, http.StatusOK, courses)
+}
+func (app *application) listAssignmnets(w http.ResponseWriter, r *http.Request) {
+	assignments, err := app.models.Assignments.AllAssignments()
+	if err != nil {
+		app.respondWithError(w, http.StatusInternalServerError, "Server error")
+		return
+	}
+
+	app.respondWithJSON(w, http.StatusOK, assignments)
+}
+
+func (app *application) AssignmentsById(w http.ResponseWriter, r *http.Request) {
+	var input struct {
+		Title       string `json:"title"`
+		Description string `json:"description"`
+		CourseId    int    `json:"courseid"`
+	}
+
+	err := app.readJSON(w, r, &input)
+	if err != nil {
+		app.respondWithError(w, http.StatusBadRequest, "Invalid request payload")
+		return
+	}
+
+	assignment := &model.Assignment{
+		Title:       input.Title,
+		Description: input.Description,
+		CourseId:    input.CourseId,
+	}
+
+	err = app.models.Assignments.InsertAssignment(assignment)
+	if err != nil {
+		app.respondWithError(w, http.StatusInternalServerError, "500 Internal Server Error")
+		return
+	}
+
+	app.respondWithJSON(w, http.StatusCreated, assignment)
+}
+
+func (app *application) listAssignmentsByCourse(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	param := vars["id"]
+
+	id, err := strconv.Atoi(param)
+	if err != nil || id < 1 {
+		app.respondWithError(w, http.StatusBadRequest, "Invalid course ID")
+		return
+	}
+
+	assign, err := app.models.Assignments.FetchAssignmentsByCourse(id)
+	if err != nil {
+		app.respondWithError(w, http.StatusInternalServerError, "500 Internal Server Error")
+		return
+	}
+
+	app.respondWithJSON(w, http.StatusOK, assign)
 }

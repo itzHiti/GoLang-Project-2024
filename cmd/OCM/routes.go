@@ -9,12 +9,21 @@ import (
 func (app *application) routes() http.Handler {
 	r := mux.NewRouter()
 
-	// Perm
+	// Healthcheck
+	r.HandleFunc("/api/healthcheck", app.healthcheckHandler).Methods("GET")
+
+	// Perm Courses
 	r.HandleFunc("/courses", app.requireActivatedUser(app.listCoursesHandlerWithOutFilters)).Methods("GET")
+	r.HandleFunc("/courses/{id}", app.requireRole([]string{"admin"}, app.updateCourseHandler)).Methods("PUT")
+	r.HandleFunc("/courses", app.createCourseHandler).Methods("POST")
+	r.HandleFunc("/courses/{id}", app.requireRole([]string{"admin"}, app.deleteCourseHandler)).Methods("DELETE")
+
+	r.HandleFunc("/courses/{id}/assignments", app.listAssignmentsByCourse).Methods("GET")
+
+	r.HandleFunc("/assignments", app.requireActivatedUser(app.listAssignmnets)).Methods("GET")
+	r.HandleFunc("/assignments", app.AssignmentsById).Methods("POST")
 
 	r.HandleFunc("/users", app.registerUserHandler).Methods("POST")
-	r.HandleFunc("/users/activated", app.activateUserHandler).Methods("PUT")
-
 	//Authenticate new user
 	r.HandleFunc("/login", app.createAuthTokenHandler).Methods("POST")
 

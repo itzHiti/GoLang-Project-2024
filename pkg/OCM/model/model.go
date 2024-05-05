@@ -20,16 +20,6 @@ type CourseModel struct {
 	ErrorLog *log.Logger
 }
 
-type AssignmentModel struct {
-	ID          int    `json:"id"`
-	Title       string `json:"title"`
-	Description string `json:"description"`
-	CourseID    int    `json:"course_id"`
-	DB          *sql.DB
-	InfoLog     *log.Logger
-	ErrorLog    *log.Logger
-}
-
 func NewModels(db *sql.DB) Models {
 	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
 	errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)

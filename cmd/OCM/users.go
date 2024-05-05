@@ -53,6 +53,7 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 		}
 		return
 	}
+	err = app.mailer.Send(user.Email, "user_welcome.tmpl", user)
 
 	var output struct {
 		Username string `json:"username"`

@@ -109,8 +109,8 @@ func (u UserModel) GetRole(id int64) (string, error) {
 
 func (u UserModel) Insert(user *User) error {
 	query := `
-	INSERT INTO users (username,email, password, token_hash)
-	VALUES ($1, $2, $3, $4)
+	INSERT INTO users (username, email, password, token_hash, role)
+	VALUES ($1, $2, $3, $4, 'user')
 	RETURNING id`
 	args := []interface{}{user.Username, user.Email, user.Password.hash, user.TokenHash}
 

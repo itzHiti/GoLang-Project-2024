@@ -12,6 +12,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/joho/godotenv"
+
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
@@ -85,11 +87,20 @@ type application struct {
 //}
 
 func main() {
+	err := godotenv.Load()
 	var cfg config
+
 	flag.StringVar(&cfg.port, "port", ":8081", "API server port")
 	flag.StringVar(&cfg.env, "env", "development", "Environment (development|staging|production)")
-	flag.StringVar(&cfg.db.dsn, "db-dsn", "postgres://postgres:qwe@localhost:5432/go?sslmode=disable", "PostgreSQL DSN")
-	flag.StringVar(&cfg.jwt.secret, "jwt-secret", "SFw6DlXYh4B4SM75hwf6cqvzgF30e5SKPSYt0hVXHCBMnOM8lRmI4EQm5hIqdRfIL4kG4VANPMQqQjHImXwbNg==", "JWT secret")
+	flag.StringVar(&cfg.db.dsn, "db-dsn", "postgres://postgres:1234Asdf@localhost:5432/go?sslmode=disable", "PostgreSQL DSN")
+	flag.StringVar(&cfg.jwt.secret, "jwt-secret", os.Getenv("JWT_SECRET"), "JWT secret")
+
+	flag.StringVar(&cfg.smtp.host, "smtp-host", os.Getenv("SMTP_HOST"), "SMTP host")
+	flag.IntVar(&cfg.smtp.port, "smtp-port", 2525, "SMTP port")
+	flag.StringVar(&cfg.smtp.username, "smtp-username", os.Getenv("SMTP_USERNAME"), "SMTP username")
+	flag.StringVar(&cfg.smtp.password, "smtp-password", os.Getenv("SMTP_PASSWORD"), "SMTP password")
+	flag.StringVar(&cfg.smtp.sender, "smtp-sender", "OCM <no-reply@OCM.net>", "SMTP sender")
+
 	flag.Parse()
 	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime)
 
@@ -104,7 +115,9 @@ func main() {
 		config: cfg,
 		models: model.NewModels(db),
 		logger: logger,
+		mailer: mailer.New(cfg.smtp.host, cfg.smtp.port, cfg.smtp.username, cfg.smtp.password, cfg.smtp.sender),
 	}
+
 	srv := &http.Server{
 		Addr:         ":8081",
 		Handler:      app.authenticate(app.routes()),
@@ -112,6 +125,12 @@ func main() {
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 30 * time.Second,
 	}
+
+	if err != nil {
+		logger.Fatal(err)
+	}
+	logger.Printf("database migrations applied")
+
 	logger.Printf("starting %s server on %s. Version: %s", cfg.env, srv.Addr, version)
 	err = srv.ListenAndServe()
 	logger.Fatal(err)
@@ -138,8 +157,9 @@ func autoMigrate(db *sql.DB) error {
 	if err != nil {
 		return err
 	}
+	path := "C:/Users/akaza/OneDrive/Рабочий стол/visual/OCM/pkg/OCM/migrations/"
 
-	migrator, err := migrate.NewWithDatabaseInstance("file:///OCM/pkg/OCM/migrations", "go", migrationDriver)
+	migrator, err := migrate.NewWithDatabaseInstance("file://"+path, "go", migrationDriver)
 
 	if err != nil {
 		return err

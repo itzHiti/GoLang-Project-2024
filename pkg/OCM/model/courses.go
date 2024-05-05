@@ -46,9 +46,9 @@ func GetCourses() []Course {
 func (cm *CourseModel) Get(id int) (*Course, error) {
 	// Query the course from the database.
 	query := `
-        SELECT course_id, title, description, course_duration
-        FROM courses
-        WHERE course_id = $1
+        SELECT courseid, title, description, courseduration
+        FROM course
+        WHERE courseid = $1
     `
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -71,9 +71,9 @@ func (cm *CourseModel) Get(id int) (*Course, error) {
 func (cm *CourseModel) Insert(course *Course) error {
 	// Insert a new course into the database.
 	query := `
-		INSERT INTO courses (title, description, course_duration) 
+		INSERT INTO course (title, description, courseduration) 
 		VALUES ($1, $2, $3) 
-		RETURNING course_id
+		RETURNING courseid
 		`
 	args := []interface{}{course.Title, course.Description, course.CourseDuration}
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
@@ -85,10 +85,10 @@ func (cm *CourseModel) Insert(course *Course) error {
 func (cm *CourseModel) Update(course *Course) error {
 	// Update a specific course in the database.
 	query := `
-        UPDATE courses
-        SET title = $1, description = $2, course_duration = $3
-        WHERE course_id = $4
-        RETURNING course_id
+        UPDATE course
+        SET title = $1, description = $2, courseduration = $3
+        WHERE courseid = $4
+        RETURNING courseid
         `
 	args := []interface{}{course.Title, course.Description, course.CourseDuration, course.CourseId}
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
@@ -100,8 +100,8 @@ func (cm *CourseModel) Update(course *Course) error {
 func (cm *CourseModel) Delete(id int) error {
 	// Delete a specific course from the database.
 	query := `
-        DELETE FROM courses
-        WHERE course_id = $1
+        DELETE FROM course
+        WHERE courseid = $1
         `
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()

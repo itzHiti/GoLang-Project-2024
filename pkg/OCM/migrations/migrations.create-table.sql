@@ -1,24 +1,92 @@
-CREATE TABLE IF NOT EXISTS students (
-    student_id SERIAL PRIMARY KEY,
-    name VARCHAR(50) NOT NULL,
-    age INT NOT NULL,
-    gpa FLOAT
+CREATE TABLE IF NOT EXISTS users
+(
+    id
+    bigserial
+    PRIMARY
+    KEY,
+    username
+    citext
+    NOT
+    NULL
+    UNIQUE,
+    email
+    citext
+    NOT
+    NULL
+    UNIQUE,
+    password
+    bytea
+    NOT
+    NULL,
+    token_hash
+    text
+    NOT
+    NULL,
+    activated
+    bool
+    NOT
+    NULL
+    DEFAULT
+    false
 );
+CREATE TABLE IF NOT EXISTS admins
+(
+    id
+    bigserial
+    PRIMARY
+    KEY,
+    user_id
+    bigint,
+    FOREIGN
+    KEY
+(
+    user_id
+)
+    REFERENCES users
+(
+    id
+)
+    );
+CREATE TABLE IF NOT EXISTS bans
+(
+    id
+    bigserial
+    PRIMARY
+    KEY,
+    user_id
+    bigint
+    NOT
+    NULL
+    UNIQUE,
+    expiry
+    timestamp
+(
+    0
+) with time zone NOT NULL,
+      FOREIGN KEY (user_id)
+    REFERENCES users
+(
+    id
+)
+  ON DELETE CASCADE
+    );
 
-CREATE TABLE IF NOT EXISTS courses (
-    course_id SERIAL PRIMARY KEY,
-    title VARCHAR(255) NOT NULL,
-    description TEXT,
-    course_duration VARCHAR(50)
-);
-
-CREATE TABLE IF NOT EXISTS courses_and_students (
-    id SERIAL PRIMARY KEY,
-    description TEXT,
-    student_id INT,
-    student_name VARCHAR(50) NOT NULL,
-    course_id INT,
-    course_title VARCHAR(255) NOT NULL,
-    FOREIGN KEY (student_id) REFERENCES students(student_id),
-    FOREIGN KEY (course_id) REFERENCES courses(course_id)
-);
+CREATE TABLE IF NOT EXISTS verifications
+(
+    code
+    bytea
+    PRIMARY
+    KEY,
+    user_id
+    bigint,
+    expiry
+    timestamp
+(
+    0
+) with time zone NOT NULL,
+      FOREIGN KEY (user_id) REFERENCES users
+(
+    id
+)
+  on delete CASCADE
+    );

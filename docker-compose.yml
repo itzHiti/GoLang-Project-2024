@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  ocm:
+    container_name: ocm-container
+    build: .
+    env_file:
+      - ./cmd/OCM/.env
+    ports:
+      - "8081:8081"
+    depends_on:
+      - go_db
+  go_db:
+    image: postgres:12
+    container_name: go_db
+    environment:
+      - POSTGRES_USER=${OCM_DB_USER}
+      - POSTGRES_PASSWORD=${OCM_DB_PASSWORD}
+      - POSTGRES_DB=${OCM_DB_NAME}
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata: {}
