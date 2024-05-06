@@ -12,12 +12,34 @@ import (
 )
 
 type config struct {
-	port string
-	env  string
-	db   struct {
-		dsn string
+	port int
+	env string
+	db struct {
+	dsn string
+	maxOpenConns int
+	maxIdleConns int
+	maxIdleTime string
+	}
+	limiter struct {
+	enabled bool
+	rps float64
+	burst int
+	}
+	smtp struct {
+	host string
+	port int
+	username string
+	password string
+	sender string
+	}
+	cors struct {
+	trustedOrigins []string
+	}
+	jwt struct {
+	secret string // Add a new field to store the JWT signing secret.
 	}
 }
+	
 
 type application struct {
 	config config
@@ -36,6 +58,8 @@ func (app *application) run() {
 	r.HandleFunc("/courses", app.createCourseHandler).Methods("POST")        // Create a new course
 	r.HandleFunc("/courses/{id}", app.updateCourseHandler).Methods("PUT")    // Update a specific course
 	r.HandleFunc("/courses/{id}", app.deleteCourseHandler).Methods("DELETE") // Delete a specific course
+	r.HandleFunc("/register", app.registerUserHandler).Methods("POST")
+	r.HandleFunc("/activate", app.activateUserHandler).Methods("GET") // Using JWT tokens
 
 	log.Printf("Starting server on %s\n", app.config.port)
 	err := http.ListenAndServe(app.config.port, r)

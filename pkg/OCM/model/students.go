@@ -8,9 +8,9 @@ import (
 )
 
 type Student struct {
-	StudentID int    `json:"student_id"`
-	Name      string `json:"name"`
-	Age       int    `json:"age"`
+	StudentID int     `json:"student_id"`
+	Name      string  `json:"name"`
+	Age       int     `json:"age"`
 	GPA       float64 `json:"gpa"`
 }
 
@@ -53,7 +53,7 @@ func (sm *StudentModel) Get(id int) (*Student, error) {
 }
 
 func (sm *StudentModel) Insert(student *Student) error {
-	
+
 	query := `
 		INSERT INTO students (student_id, name, age, gpa) 
 		VALUES ($1, $2, $3, $4) 
@@ -67,7 +67,7 @@ func (sm *StudentModel) Insert(student *Student) error {
 }
 
 func (sm *StudentModel) Update(student *Student) error {
-	
+
 	query := `
         UPDATE students
         SET name = $1, age = $2, gpa = $3
