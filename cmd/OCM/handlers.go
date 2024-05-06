@@ -138,7 +138,7 @@ func (app *application) deleteCourseHandler(w http.ResponseWriter, r *http.Reque
 
 	err = app.models.Courses.Delete(id)
 	if err != nil {
-		app.respondWithError(w, http.StatusInternalServerError, "500 Internal Server Error")
+		app.respondWithError(w, http.StatusInternalServerError, "500 Internal Server Error (Probably course was not created)")
 		return
 	}
 

@@ -94,7 +94,8 @@ func (app *application) requireRole(allowedRoles model.Roles, next http.HandlerF
 		role := user.Role
 		fmt.Println(role)
 		fmt.Println(user)
-		if !allowedRoles.Include(role) {
+		if !allowedRoles.Include(user.Role) {
+			app.logger.Printf("User %s does not have the required role to do that.", user.Username)
 			app.notPermittedResponse(w, r)
 			return
 		}

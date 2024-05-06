@@ -45,23 +45,17 @@ func (u *User) IsAnonymous() bool {
 }
 
 func (u UserModel) IsAdmin(id int64) (bool, error) {
-	query := `select $1 in (select user_id from admins) as isadmin`
+	query := `SELECT EXISTS(SELECT 1 FROM admins WHERE user_id = $1) AS isadmin`
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	var ans bool
-	err := u.DB.QueryRowContext(ctx, query, id).Scan(&ans)
-
+	var isAdmin bool
+	err := u.DB.QueryRowContext(ctx, query, id).Scan(&isAdmin)
 	if err != nil {
-		switch {
-		case errors.Is(err, sql.ErrNoRows):
-			return false, ErrRecordNotFound
-		default:
-			return false, err
-		}
+		return false, err
 	}
-	return ans, nil
+	return isAdmin, nil
 }
 
 func (u UserModel) HasBan(id int64) (bool, error) {
