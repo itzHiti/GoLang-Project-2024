@@ -14,7 +14,7 @@
 ### Description:
 > The project is intended to be an online learning website of school of courses.
 > Project name: `GoUnion`.
-> Project entities: `courses, users`.
+> Project entities: `courses, students, assignments`.
 
 ## Members
 
@@ -22,8 +22,6 @@
 | --------- | ---------- |
 | Abzalkhanuly Alan | 22B030505 |
 | Karim Madi | 22B031181 |
-| Baynazarov Ramadan | 22B030523 |
-| Abdullaev Shakhzod | 22B031601 |
 
 ## OCM's Rest API
 

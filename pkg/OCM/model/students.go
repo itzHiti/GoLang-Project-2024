@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"strings"
 	"time"
 )
 
@@ -41,6 +42,35 @@ func GetStudents() []Student {
 
 type StudentModel struct {
 	DB *sql.DB
+}
+
+func (sm *StudentModel) List(page, pageSize int, filter, sort string) ([]*Student, error) {
+	offset := (page - 1) * pageSize
+	query := "SELECT studentid, name, age, gpa FROM student WHERE name ILIKE ?"
+
+	if sort != "" {
+		query += " ORDER BY " + sort
+	} else {
+		query += " ORDER BY studentid ASC" // default sorting
+	}
+	query += " LIMIT ? OFFSET ?"
+
+	rows, err := sm.DB.Query(query, "%"+strings.ToLower(filter)+"%", pageSize, offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var students []*Student
+	for rows.Next() {
+		var student Student
+		if err := rows.Scan(&student.StudentID, &student.Name, &student.Age, &student.GPA); err != nil {
+			return nil, err
+		}
+		students = append(students, &student)
+	}
+
+	return students, nil
 }
 
 func (sm *StudentModel) Get(id int) (*Student, error) {

@@ -184,7 +184,32 @@ func (app *application) listCoursesHandlerWithOutFilters(w http.ResponseWriter, 
 	app.respondWithJSON(w, http.StatusOK, courses)
 }
 
-func (app *application) listAssignmnets(w http.ResponseWriter, r *http.Request) {
+func (app *application) listAssignmentsHandler(w http.ResponseWriter, r *http.Request) {
+	pageStr := r.URL.Query().Get("page")
+	pageSizeStr := r.URL.Query().Get("pageSize")
+	filter := r.URL.Query().Get("filter")
+	sort := r.URL.Query().Get("sort")
+
+	page, err := strconv.Atoi(pageStr)
+	if err != nil || page < 1 {
+		page = 1 // def value
+	}
+
+	pageSize, err := strconv.Atoi(pageSizeStr)
+	if err != nil || pageSize < 1 {
+		pageSize = 10 // def value
+	}
+
+	assignments, err := app.models.Assignments.List(page, pageSize, filter, sort)
+	if err != nil {
+		app.respondWithError(w, http.StatusInternalServerError, "Server error")
+		return
+	}
+
+	app.respondWithJSON(w, http.StatusOK, assignments)
+}
+
+func (app *application) listAssignmnetsWithoutFilters(w http.ResponseWriter, r *http.Request) {
 	assignments, err := app.models.Assignments.AllAssignments()
 	if err != nil {
 		app.respondWithError(w, http.StatusInternalServerError, "Server error")
@@ -192,6 +217,31 @@ func (app *application) listAssignmnets(w http.ResponseWriter, r *http.Request) 
 	}
 
 	app.respondWithJSON(w, http.StatusOK, assignments)
+}
+
+func (app *application) listStudentsHandler(w http.ResponseWriter, r *http.Request) {
+	pageStr := r.URL.Query().Get("page")
+	pageSizeStr := r.URL.Query().Get("pageSize")
+	filter := r.URL.Query().Get("filter")
+	sort := r.URL.Query().Get("sort")
+
+	page, err := strconv.Atoi(pageStr)
+	if err != nil || page < 1 {
+		page = 1 // def value
+	}
+
+	pageSize, err := strconv.Atoi(pageSizeStr)
+	if err != nil || pageSize < 1 {
+		pageSize = 10 // def value
+	}
+
+	students, err := app.models.Student.List(page, pageSize, filter, sort)
+	if err != nil {
+		app.respondWithError(w, http.StatusInternalServerError, "Server error")
+		return
+	}
+
+	app.respondWithJSON(w, http.StatusOK, students)
 }
 
 func (app *application) AssignmentsById(w http.ResponseWriter, r *http.Request) {

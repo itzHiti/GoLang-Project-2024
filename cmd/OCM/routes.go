@@ -25,17 +25,17 @@ func (app *application) routes() http.Handler {
 	r.HandleFunc("/courses/{id:[0-9]+}/students", app.listStudentsByCourse).Methods("GET")
 
 	// Assignments
-	r.HandleFunc("/assignments", app.requireActivatedUser(app.listAssignmnets)).Methods("GET")
+	r.HandleFunc("/assignments", app.requireActivatedUser(app.listAssignmnetsWithoutFilters)).Methods("GET")
 	r.HandleFunc("/assignments", app.AssignmentsById).Methods("POST")
 	r.HandleFunc("/assignments/{id}", app.AssignmentUpdate).Methods("PUT")
 	r.HandleFunc("/assignments/{id}", app.AssigmentDelete).Methods("DELETE")
 	// Assignments - filter/pagination/sort
-	// тут
+	r.HandleFunc("/assignmentss", app.listAssignmentsHandler).Methods("GET")
 	// Student
 	r.HandleFunc("/students/{id}", app.getStudentHandler).Methods("GET")
 	r.HandleFunc("/students", app.createStudentHandler).Methods("POST")
 	// Student - filter/pagination/sort
-	// тут
+	r.HandleFunc("/studentss", app.listStudentsHandler).Methods("GET")
 	// user auth
 	r.HandleFunc("/users", app.registerUserHandler).Methods("POST")
 	//Authenticate new user

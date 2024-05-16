@@ -6,6 +6,7 @@ import (
 	"errors"
 	"log"
 	_ "os"
+	"strings"
 	"time"
 )
 
@@ -24,6 +25,35 @@ type AssignmentModel struct {
 	DB          *sql.DB
 	InfoLog     *log.Logger
 	ErrorLog    *log.Logger
+}
+
+func (am *AssignmentModel) List(page, pageSize int, filter, sort string) ([]*Assignment, error) {
+	offset := (page - 1) * pageSize
+	query := "SELECT id, title, description, courseid FROM assignmentmodel WHERE title ILIKE ?"
+
+	if sort != "" {
+		query += " ORDER BY " + sort
+	} else {
+		query += " ORDER BY id ASC" // default sorting
+	}
+	query += " LIMIT ? OFFSET ?"
+
+	rows, err := am.DB.Query(query, "%"+strings.ToLower(filter)+"%", pageSize, offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var assignments []*Assignment
+	for rows.Next() {
+		var assignment Assignment
+		if err := rows.Scan(&assignment.AssignmentId, &assignment.Title, &assignment.Description, &assignment.CourseId); err != nil {
+			return nil, err
+		}
+		assignments = append(assignments, &assignment)
+	}
+
+	return assignments, nil
 }
 
 func (am *AssignmentModel) AllAssignments() ([]*Assignment, error) {
