@@ -3,6 +3,7 @@ package model
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"log"
 	_ "os"
 	"time"
@@ -64,6 +65,20 @@ func (am *AssignmentModel) InsertAssignment(assignment *Assignment) error {
 	return am.DB.QueryRowContext(ctx, query, args...).Scan(&assignment.CourseId)
 }
 
+func (am *AssignmentModel) Update(assignment *Assignment) error {
+	query := `
+        UPDATE assignmentmodel
+        SET title = $1, description = $2, id = $3
+        WHERE id = $4
+        RETURNING id
+        `
+	args := []interface{}{assignment.Title, assignment.Description, assignment.AssignmentId, assignment.CourseId}
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	return am.DB.QueryRowContext(ctx, query, args...).Scan(&assignment.AssignmentId)
+}
+
 func (am *AssignmentModel) FetchAssignmentsByCourse(courseId int) ([]Assignment, error) {
 	query := `
     SELECT 
@@ -105,4 +120,41 @@ func (am *AssignmentModel) FetchAssignmentsByCourse(courseId int) ([]Assignment,
 	}
 
 	return assignments, nil
+}
+
+func (am *AssignmentModel) Get(id int) (*Assignment, error) {
+	// Query the course from the database.
+	query := `
+        SELECT id, title, description, courseid
+        FROM assignmentmodel
+        WHERE id = $1
+    `
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	assignment := &Assignment{}
+	err := am.DB.QueryRowContext(ctx, query, id).Scan(&assignment.CourseId, &assignment.Title, &assignment.Description, &assignment.AssignmentId)
+	if err != nil { // nil => null
+		if err == sql.ErrNoRows {
+			// The course was not found
+			return nil, errors.New("courses not found")
+		} else {
+			// Some other error happened
+			return nil, err
+		}
+	}
+
+	return assignment, nil
+}
+func (am *AssignmentModel) Delete(id int) error {
+	// Delete a specific course from the database.
+	query := `
+        DELETE FROM assignmentmodel
+        WHERE id = $1
+        `
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	_, err := am.DB.ExecContext(ctx, query, id)
+	return err
 }

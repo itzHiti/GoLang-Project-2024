@@ -8,7 +8,7 @@ import (
 )
 
 type Student struct {
-	StudentID int     `json:"student_id"`
+	StudentID int     `json:"studentid"`
 	Name      string  `json:"name"`
 	Age       int     `json:"age"`
 	GPA       float64 `json:"gpa"`
@@ -44,20 +44,33 @@ type StudentModel struct {
 }
 
 func (sm *StudentModel) Get(id int) (*Student, error) {
-	for _, s := range students {
-		if s.StudentID == id {
-			return &s, nil
+	query := `
+        SELECT studentid, name, age, gpa
+        FROM student
+        WHERE studentid = $1
+    `
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	student := &Student{}
+	err := sm.DB.QueryRowContext(ctx, query, id).Scan(&student.StudentID, &student.Name, &student.Age, &student.GPA)
+	if err != nil { // nil => null
+		if err == sql.ErrNoRows {
+			return nil, errors.New("students not found")
+		} else {
+			// Some other error happened
+			return nil, err
 		}
 	}
-	return nil, errors.New("Student not found")
-}
 
+	return student, nil
+}
 func (sm *StudentModel) Insert(student *Student) error {
 
 	query := `
-		INSERT INTO students (student_id, name, age, gpa) 
+		INSERT INTO student (studentid, name, age, gpa) 
 		VALUES ($1, $2, $3, $4) 
-		RETURNING student_id
+		RETURNING studentid
 	`
 	args := []interface{}{student.StudentID, student.Name, student.Age, student.GPA}
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
@@ -71,8 +84,8 @@ func (sm *StudentModel) Update(student *Student) error {
 	query := `
         UPDATE students
         SET name = $1, age = $2, gpa = $3
-        WHERE student_id = $4
-        RETURNING student_id
+        WHERE studentid = $4
+        RETURNING studentid
     `
 	args := []interface{}{student.Name, student.Age, student.GPA, student.StudentID}
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
@@ -84,12 +97,40 @@ func (sm *StudentModel) Update(student *Student) error {
 func (sm *StudentModel) Delete(id int) error {
 
 	query := `
-        DELETE FROM students
-        WHERE student_id = $1
+        DELETE FROM student
+        WHERE studentid = $1
     `
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
 	_, err := sm.DB.ExecContext(ctx, query, id)
 	return err
+}
+func (sm *StudentModel) FetchStudentsByCourse(courseID int) ([]Student, error) {
+	stmt := `SELECT s.studentid, s.name, s.age, s.gpa
+			 FROM student s
+			 JOIN student_course sc ON s.studentid = sc.studentid
+			 JOIN course c ON sc.courseid = c.courseid
+			 WHERE c.courseid = $1`
+
+	rows, err := sm.DB.Query(stmt, courseID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var students []Student
+	for rows.Next() {
+		var student Student
+		err := rows.Scan(&student.StudentID, &student.Name, &student.Age, &student.GPA)
+		if err != nil {
+			return nil, err
+		}
+		students = append(students, student)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+	return students, nil
 }

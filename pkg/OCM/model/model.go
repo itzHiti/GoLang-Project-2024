@@ -12,8 +12,12 @@ type Models struct {
 	Assignments   AssignmentModel
 	Verifications VerificationModel
 	Roles         RoleModel
+	Student       StudentModel
 }
-
+type StudentCourse struct {
+	StudentID int `json:"studentid"`
+	CourseID  int `json:"courseid"`
+}
 type CourseModel struct {
 	DB       *sql.DB
 	InfoLog  *log.Logger
@@ -41,6 +45,9 @@ func NewModels(db *sql.DB) Models {
 			DB: db,
 		},
 		Roles: RoleModel{
+			DB: db,
+		},
+		Student: StudentModel{
 			DB: db,
 		},
 	}

@@ -125,7 +125,6 @@ func main() {
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 30 * time.Second,
 	}
-
 	if err != nil {
 		logger.Fatal(err)
 	}

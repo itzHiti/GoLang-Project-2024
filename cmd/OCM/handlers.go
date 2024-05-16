@@ -183,6 +183,7 @@ func (app *application) listCoursesHandlerWithOutFilters(w http.ResponseWriter, 
 
 	app.respondWithJSON(w, http.StatusOK, courses)
 }
+
 func (app *application) listAssignmnets(w http.ResponseWriter, r *http.Request) {
 	assignments, err := app.models.Assignments.AllAssignments()
 	if err != nil {
@@ -238,4 +239,138 @@ func (app *application) listAssignmentsByCourse(w http.ResponseWriter, r *http.R
 	}
 
 	app.respondWithJSON(w, http.StatusOK, assign)
+}
+
+func (app *application) AssignmentUpdate(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	param := vars["id"]
+
+	id, err := strconv.Atoi(param)
+	if err != nil || id < 1 {
+		app.respondWithError(w, http.StatusBadRequest, "Invalid Assignment ID")
+		return
+	}
+
+	assignment, err := app.models.Assignments.Get(id)
+	if err != nil {
+		app.respondWithError(w, http.StatusNotFound, "404 Not Found")
+		return
+	}
+
+	var input struct {
+		Title       *string `json:"title"`
+		Description *string `json:"description"`
+		CourseId    int     `json:"courseid"`
+	}
+
+	err = app.readJSON(w, r, &input)
+	if err != nil {
+		app.respondWithError(w, http.StatusBadRequest, "Invalid request payload")
+		return
+	}
+
+	if input.Title != nil {
+		assignment.Title = *input.Title
+	}
+
+	if input.Description != nil {
+		assignment.Description = *input.Description
+	}
+
+	if input.CourseId != 0 {
+		assignment.CourseId = input.CourseId
+	}
+
+	err = app.models.Assignments.Update(assignment)
+	if err != nil {
+		app.respondWithError(w, http.StatusInternalServerError, "500 Internal Server Error")
+		return
+	}
+
+	app.respondWithJSON(w, http.StatusOK, assignment)
+}
+
+func (app *application) AssigmentDelete(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	param := vars["id"]
+
+	id, err := strconv.Atoi(param)
+	if err != nil || id < 1 {
+		app.respondWithError(w, http.StatusBadRequest, "Invalid course ID")
+		return
+	}
+
+	err = app.models.Assignments.Delete(id)
+	if err != nil {
+		app.respondWithError(w, http.StatusInternalServerError, "500 Internal Server Error (Probably course was not created)")
+		return
+	}
+
+	app.respondWithJSON(w, http.StatusOK, map[string]string{"result": "success"})
+}
+
+func (app *application) listStudentsByCourse(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	param := vars["id"]
+
+	id, err := strconv.Atoi(param)
+	if err != nil || id < 1 {
+		app.respondWithError(w, http.StatusBadRequest, "Invalid course ID")
+		return
+	}
+
+	students, err := app.models.Student.FetchStudentsByCourse(id)
+	if err != nil {
+		app.respondWithError(w, http.StatusInternalServerError, "500 Internal Server Error")
+		return
+	}
+
+	app.respondWithJSON(w, http.StatusOK, students)
+}
+
+func (app *application) createStudentHandler(w http.ResponseWriter, r *http.Request) {
+	var input struct {
+		Name string  `json:"name"`
+		Age  int     `json:"age"`
+		GPA  float64 `json:"gpa"`
+	}
+
+	err := app.readJSON(w, r, &input)
+	if err != nil {
+		app.respondWithError(w, http.StatusBadRequest, "Invalid request payload")
+		return
+	}
+
+	student := &model.Student{
+		Name: input.Name,
+		Age:  input.Age,
+		GPA:  input.GPA,
+	}
+
+	err = app.models.Student.Insert(student)
+	if err != nil {
+		app.respondWithError(w, http.StatusInternalServerError, "500 Internal Server Error")
+		return
+	}
+
+	app.respondWithJSON(w, http.StatusCreated, student)
+}
+
+func (app *application) getStudentHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	param := vars["id"]
+
+	id, err := strconv.Atoi(param)
+	if err != nil || id < 1 {
+		app.respondWithError(w, http.StatusBadRequest, "Invalid student ID")
+		return
+	}
+
+	student, err := app.models.Student.Get(id)
+	if err != nil {
+		app.respondWithError(w, http.StatusNotFound, "404 Not Found")
+		return
+	}
+
+	app.respondWithJSON(w, http.StatusOK, student)
 }

@@ -113,7 +113,7 @@ func (cm *CourseModel) Delete(id int) error {
 func (cm *CourseModel) List(page, pageSize int, filter, sort string) ([]*Course, error) {
 	var courses []*Course
 
-	baseQuery := `SELECT course_id, title, description, course_duration FROM courses`
+	baseQuery := `SELECT courseid, title, description, courseduration FROM course`
 	whereClauses, args := []string{}, []interface{}{}
 
 	// Фильтрация
