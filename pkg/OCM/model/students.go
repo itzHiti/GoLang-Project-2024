@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"log"
 	"strings"
 	"time"
 )
@@ -46,17 +47,13 @@ type StudentModel struct {
 
 func (sm *StudentModel) List(page, pageSize int, filter, sort string) ([]*Student, error) {
 	offset := (page - 1) * pageSize
-	query := "SELECT studentid, name, age, gpa FROM student WHERE name ILIKE ?"
+	query := "SELECT studentid, name, age, gpa FROM student WHERE name ILIKE $1 ORDER BY " + sort + " LIMIT $2 OFFSET $3"
 
-	if sort != "" {
-		query += " ORDER BY " + sort
-	} else {
-		query += " ORDER BY studentid ASC" // default sorting
-	}
-	query += " LIMIT ? OFFSET ?"
+	log.Printf("Executing query: %s with params: filter=%s, pageSize=%d, offset=%d", query, filter, pageSize, offset)
 
 	rows, err := sm.DB.Query(query, "%"+strings.ToLower(filter)+"%", pageSize, offset)
 	if err != nil {
+		log.Printf("Error executing query: %v", err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -112,7 +109,7 @@ func (sm *StudentModel) Insert(student *Student) error {
 func (sm *StudentModel) Update(student *Student) error {
 
 	query := `
-        UPDATE students
+        UPDATE student
         SET name = $1, age = $2, gpa = $3
         WHERE studentid = $4
         RETURNING studentid

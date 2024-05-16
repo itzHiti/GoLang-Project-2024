@@ -29,17 +29,13 @@ type AssignmentModel struct {
 
 func (am *AssignmentModel) List(page, pageSize int, filter, sort string) ([]*Assignment, error) {
 	offset := (page - 1) * pageSize
-	query := "SELECT id, title, description, courseid FROM assignmentmodel WHERE title ILIKE ?"
+	query := "SELECT id, title, description, courseid FROM assignmentmodel WHERE title ILIKE $1 ORDER BY " + sort + " LIMIT $2 OFFSET $3"
 
-	if sort != "" {
-		query += " ORDER BY " + sort
-	} else {
-		query += " ORDER BY id ASC" // default sorting
-	}
-	query += " LIMIT ? OFFSET ?"
+	log.Printf("Executing query: %s with params: filter=%s, pageSize=%d, offset=%d", query, filter, pageSize, offset)
 
 	rows, err := am.DB.Query(query, "%"+strings.ToLower(filter)+"%", pageSize, offset)
 	if err != nil {
+		log.Printf("Error executing query: %v", err)
 		return nil, err
 	}
 	defer rows.Close()

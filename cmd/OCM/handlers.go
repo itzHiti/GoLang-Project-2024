@@ -2,11 +2,13 @@ package main
 
 import (
 	"OCM/pkg/OCM/model"
+	"database/sql"
 	"encoding/json"
+	"errors"
+	"fmt"
+	"github.com/gorilla/mux"
 	"net/http"
 	"strconv"
-
-	"github.com/gorilla/mux"
 )
 
 func (app *application) respondWithError(w http.ResponseWriter, code int, message string) {
@@ -192,17 +194,29 @@ func (app *application) listAssignmentsHandler(w http.ResponseWriter, r *http.Re
 
 	page, err := strconv.Atoi(pageStr)
 	if err != nil || page < 1 {
-		page = 1 // def value
+		page = 1 // default value
 	}
 
 	pageSize, err := strconv.Atoi(pageSizeStr)
 	if err != nil || pageSize < 1 {
-		pageSize = 10 // def value
+		pageSize = 10 // default value
 	}
 
-	assignments, err := app.models.Assignments.List(page, pageSize, filter, sort)
+	validSortColumns := map[string]string{
+		"title_asc":  "title ASC",
+		"title_desc": "title DESC",
+		"id_asc":     "id ASC",
+		"id_desc":    "id DESC",
+	}
+
+	sortColumn, ok := validSortColumns[sort]
+	if !ok {
+		sortColumn = "id ASC" // default sorting
+	}
+
+	assignments, err := app.models.Assignments.List(page, pageSize, filter, sortColumn)
 	if err != nil {
-		app.respondWithError(w, http.StatusInternalServerError, "Server error")
+		app.respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("Server error: %v", err))
 		return
 	}
 
@@ -227,17 +241,31 @@ func (app *application) listStudentsHandler(w http.ResponseWriter, r *http.Reque
 
 	page, err := strconv.Atoi(pageStr)
 	if err != nil || page < 1 {
-		page = 1 // def value
+		page = 1 // default value
 	}
 
 	pageSize, err := strconv.Atoi(pageSizeStr)
 	if err != nil || pageSize < 1 {
-		pageSize = 10 // def value
+		pageSize = 10 // default value
 	}
 
-	students, err := app.models.Student.List(page, pageSize, filter, sort)
+	validSortColumns := map[string]string{
+		"name_asc":  "name ASC",
+		"name_desc": "name DESC",
+		"age_asc":   "age ASC",
+		"age_desc":  "age DESC",
+		"gpa_asc":   "gpa ASC",
+		"gpa_desc":  "gpa DESC",
+	}
+
+	sortColumn, ok := validSortColumns[sort]
+	if !ok {
+		sortColumn = "studentid ASC" // default sorting
+	}
+
+	students, err := app.models.Student.List(page, pageSize, filter, sortColumn)
 	if err != nil {
-		app.respondWithError(w, http.StatusInternalServerError, "Server error")
+		app.respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("Server error: %v", err))
 		return
 	}
 
@@ -423,4 +451,67 @@ func (app *application) getStudentHandler(w http.ResponseWriter, r *http.Request
 	}
 
 	app.respondWithJSON(w, http.StatusOK, student)
+}
+func (app *application) updateStudentHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	idStr := vars["id"]
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		app.respondWithError(w, http.StatusBadRequest, "Invalid student ID")
+		return
+	}
+
+	var input struct {
+		Name string  `json:"name"`
+		Age  int     `json:"age"`
+		GPA  float64 `json:"gpa"`
+	}
+
+	err = json.NewDecoder(r.Body).Decode(&input)
+	if err != nil {
+		app.respondWithError(w, http.StatusBadRequest, "Invalid request payload")
+		return
+	}
+
+	if input.Name == "" || input.Age <= 0 || input.GPA < 0.0 || input.GPA > 4.0 {
+		app.respondWithError(w, http.StatusBadRequest, "Invalid student data")
+		return
+	}
+
+	student := &model.Student{
+		StudentID: id,
+		Name:      input.Name,
+		Age:       input.Age,
+		GPA:       input.GPA,
+	}
+
+	err = app.models.Student.Update(student)
+	if err != nil {
+		app.respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("Server error: %v", err))
+		return
+	}
+
+	app.respondWithJSON(w, http.StatusOK, map[string]string{"message": "Student updated successfully"})
+}
+
+func (app *application) deleteStudentHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	idStr := vars["id"]
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		app.respondWithError(w, http.StatusBadRequest, "Invalid student ID")
+		return
+	}
+
+	err = app.models.Student.Delete(id)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			app.respondWithError(w, http.StatusNotFound, "Student not found")
+		} else {
+			app.respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("Server error: %v", err))
+		}
+		return
+	}
+
+	app.respondWithJSON(w, http.StatusOK, map[string]string{"message": "Student deleted successfully"})
 }

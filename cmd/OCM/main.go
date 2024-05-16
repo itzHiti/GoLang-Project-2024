@@ -7,6 +7,7 @@ import (
 	"context"
 	"database/sql"
 	"flag"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -38,13 +39,6 @@ type config struct {
 		rps     float64
 		burst   int
 	}
-	smtp struct {
-		host     string
-		port     int
-		username string
-		password string
-		sender   string
-	}
 	cors struct {
 		trustedOrigins []string
 	}
@@ -61,45 +55,14 @@ type application struct {
 	auth   auth.AuthService
 }
 
-//func (app *application) run() {
-//	r := mux.NewRouter()
-//
-//	r.HandleFunc("/", app.HomeHandler)     // home page
-//	r.HandleFunc("/user", app.UserHandler) // user page
-//
-//	// Course Singleton
-//	// r.HandleFunc("/courses/{id}", app.getCourseHandler).Methods("GET")       // [LEGACY] Get a specific course
-//
-//	r.HandleFunc("/courses", app.requireActivatedUser(app.listCoursesHandlerWithOutFilters)).Methods("GET")
-//
-//	r.HandleFunc("/courses", app.createCourseHandler).Methods("POST")        // Create a new course
-//	r.HandleFunc("/courses/{id}", app.updateCourseHandler).Methods("PUT")    // Update a specific course
-//	r.HandleFunc("/courses/{id}", app.deleteCourseHandler).Methods("DELETE") // Delete a specific course
-//
-//	r.HandleFunc("/users", app.registerUserHandler).Methods("POST")
-//	r.HandleFunc("/users/activated", app.activateUserHandler).Methods("PUT")
-//	//Authenticate new user
-//	r.HandleFunc("/login", app.createAuthTokenHandler).Methods("POST")
-//
-//	log.Println("Starting server on ", app.config.port)
-//	err := http.ListenAndServe(app.config.port, r)
-//	log.Fatal(err)
-//}
-
 func main() {
 	err := godotenv.Load()
 	var cfg config
-
+	fmt.Println(os.Getenv("SMTP_PASSWORD"))
 	flag.StringVar(&cfg.port, "port", ":8081", "API server port")
 	flag.StringVar(&cfg.env, "env", "development", "Environment (development|staging|production)")
 	flag.StringVar(&cfg.db.dsn, "db-dsn", "postgres://postgres:1234Asdf@localhost:5432/go?sslmode=disable", "PostgreSQL DSN")
-	flag.StringVar(&cfg.jwt.secret, "jwt-secret", os.Getenv("JWT_SECRET"), "JWT secret")
-
-	flag.StringVar(&cfg.smtp.host, "smtp-host", os.Getenv("SMTP_HOST"), "SMTP host")
-	flag.IntVar(&cfg.smtp.port, "smtp-port", 2525, "SMTP port")
-	flag.StringVar(&cfg.smtp.username, "smtp-username", os.Getenv("SMTP_USERNAME"), "SMTP username")
-	flag.StringVar(&cfg.smtp.password, "smtp-password", os.Getenv("SMTP_PASSWORD"), "SMTP password")
-	flag.StringVar(&cfg.smtp.sender, "smtp-sender", "OCM <no-reply@OCM.net>", "SMTP sender")
+	flag.StringVar(&cfg.jwt.secret, "jwt-secret", "SFw6DlXYh4B4SM75hwf6cqvzgF30e5SKPSYt0hVXHCBMnOM8lRmI4EQm5hIqdRfIL4kG4VANPMQqQjHImXwbNg==", "JWT secret")
 
 	flag.Parse()
 	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime)
@@ -115,12 +78,13 @@ func main() {
 		config: cfg,
 		models: model.NewModels(db),
 		logger: logger,
-		mailer: mailer.New(cfg.smtp.host, cfg.smtp.port, cfg.smtp.username, cfg.smtp.password, cfg.smtp.sender),
 	}
+
+	handler := corsMiddleware(app.authenticate(app.routes()))
 
 	srv := &http.Server{
 		Addr:         ":8081",
-		Handler:      app.authenticate(app.routes()),
+		Handler:      handler,
 		IdleTimeout:  time.Minute,
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 30 * time.Second,
@@ -168,4 +132,21 @@ func autoMigrate(db *sql.DB) error {
 		return err
 	}
 	return nil
+}
+
+func corsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("CORS middleware: %s %s", r.Method, r.RequestURI)
+
+		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:4200")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
 }
